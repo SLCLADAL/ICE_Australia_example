@@ -1,0 +1,88 @@
+---
+title: "ICE Corpus"
+output: html_notebook
+---
+
+
+# Intro
+
+- About ICE corpus
+- About this notebook
+
+# Set up
+
+- Install packages
+
+```{r}
+install.packages()
+```
+
+- Load
+
+```{r}
+library()
+```
+
+
+# Download the data
+
+- Download data from web
+
+
+```{r}
+ice_corpus <- 
+```
+
+# Processing the data
+
+```{r}
+corpus_files <- list.files("data", recursive = TRUE, pattern = "*.TXT", full.names = TRUE)
+load_file <- function(input_file){
+  paste(readLines(input_file), collapse="\n")
+}
+loaded_texts <- sapply(corpus_files, load_file)
+# to do: suppress incomplete final line warning
+# to do: deal with markup
+extract_communication_mode <- function(input_file){
+  substring(basename(input_file),1,1)
+}
+communication_mode <- sapply(corpus_files, extract_communication_mode)
+# bring in subcorpora
+extract_subcorpus <- function(input_file){
+  substring(basename(input_file),1,3)
+}
+subcorpus <- sapply(corpus_files, extract_subcorpus)
+```
+
+```{r}
+# Deal with markup
+#remove_markup <- function(input_file){
+  
+#}
+install.packages("tidyverse")
+library(tidyverse)
+#str_remove_all with regex? spoken and written markup different?
+# str_remove_all(loaded_texts[1], "<[^<>]*>") - might need multiple rounds of regex to capture everything
+```
+
+
+```{r}
+install.packages("quanteda")
+install.packages("quanteda.textstats")
+library(quanteda)
+library(quanteda.textstats)
+# To do: figure out where to put install.packages block (important documentation but will be pre-installed in notebook)
+```
+```{r}
+ice_corpus <- corpus(loaded_texts)
+docvars(ice_corpus, field = "communication_mode") <- communication_mode
+docvars(ice_corpus, field = "subcorpus") <- subcorpus
+ice_tokens <- tokens(ice_corpus)
+# kwic(ice_tokens, pattern = "banana")
+ice_dfm <- dfm(ice_tokens)
+```
+
+```{r}
+textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="S")
+```
+
