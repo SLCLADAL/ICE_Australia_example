@@ -9,18 +9,22 @@ output: html_notebook
 - About ICE corpus
 - About this notebook
 
-# Set up
+# Set up?
 
-- Install packages
+- Install packages 
 
 ```{r}
-install.packages()
+install.packages("tidyverse")
+install.packages("quanteda")
+install.packages("quanteda.textstats")
 ```
 
 - Load
 
 ```{r}
-library()
+library(tidyverse)
+library(quanteda)
+library(quanteda.textstats)
 ```
 
 
@@ -30,7 +34,8 @@ library()
 
 
 ```{r}
-ice_corpus <- 
+# work out easiest way to download data
+# ice_corpus <- 
 ```
 
 # Processing the data
@@ -54,8 +59,20 @@ extract_subcorpus <- function(input_file){
 subcorpus <- sapply(corpus_files, extract_subcorpus)
 ```
 
+# Analysis
+
+- Run analysis (keywords) on data as is
+- Discuss why it's weird (markup)
+
+# Processing the data (take two)
+
+- Discussion of data processing/'cleaning', what decisions are made here (depends what you're looking at)
+- Actually look at data (inventory of tags), link to ICE markup guide (but point out that it might not be consistent - again, look at data!)
+- Decide what to remove
+
 ```{r}
 # Deal with markup
+# Replace new line with spaces, remove &*OX tags, put new lines back in before speaker/new paragraph tag (diff for spoken vs written), remove all markup
 #remove_markup <- function(input_file){
   
 #}
@@ -63,8 +80,39 @@ install.packages("tidyverse")
 library(tidyverse)
 #str_remove_all with regex? spoken and written markup different?
 # str_remove_all(loaded_texts[1], "<[^<>]*>") - might need multiple rounds of regex to capture everything
+# test <- str_replace_all(loaded_texts[1], "\n", " ")
+# test2 <- str_remove_all(test, "<O>.*?</O>")
+# test3 <- str_remove_all(test2, "<X>.*?</X>")
+# test4 <- str_remove_all(test3, "<&>.*?</&>")
+# put line breaks back in
+# why is <#\> turning into <#\\> ???? need to escape both 
+# test5 <- str_replace_all(test4, "<#\\\\>", "\n")
+# test6 <- str_remove_all(test5, "<.*?>")
+# check written 
+# writtentest <- load_file("data/ICE Written/W1A/W1A-001.TXT")
+# writtentest1 <- str_replace_all(writtentest, "\n", " ")
+#wtest2 <- str_remove_all(writtentest1, "<O>.*?</O>")
+#wtest3 <- str_remove_all(wtest2, "<X>.*?</X>")
+#wtest4 <- str_remove_all(wtest3, "<&>.*?</&>")
+# put line breaks back in
+# why is <#\> turning into <#\\> ???? need to escape both 
+#wtest5 <- str_replace_all(wtest4, "<#\\\\>", "\n")
+#wtest6 <- str_remove_all(wtest5, "<.*?>")
+remove_markup <- function(input_file){
+  input_file %>%
+    str_replace_all("\n", " ") %>%
+    str_remove_all("<O>.*?</O>") %>%
+    str_remove_all("<X>.*?</X>") %>%
+    str_remove_all("<&>.*?</&>") %>%
+    # str_remove_all("<\*>.*?</\*>") %>% ??
+    str_replace_all("<#\\\\>", "\n") %>%
+    str_remove_all("<.*?>")
+}
+# testfunction <- remove_markup(loaded_texts[1])
 ```
+# Analysis (take two)
 
+- Look it's different now
 
 ```{r}
 install.packages("quanteda")
