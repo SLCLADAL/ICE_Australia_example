@@ -64,6 +64,20 @@ subcorpus <- sapply(corpus_files, extract_subcorpus)
 - Run analysis (keywords) on data as is
 - Discuss why it's weird (markup)
 
+
+```{r}
+ice_corpus <- corpus(loaded_texts)
+docvars(ice_corpus, field = "communication_mode") <- communication_mode
+docvars(ice_corpus, field = "subcorpus") <- subcorpus
+ice_tokens <- tokens(ice_corpus)
+# kwic(ice_tokens, pattern = "banana")
+ice_dfm <- dfm(ice_tokens)
+```
+
+```{r}
+textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="S")
+```
+
 # Processing the data (take two)
 
 - Discussion of data processing/'cleaning', what decisions are made here (depends what you're looking at)
@@ -104,10 +118,11 @@ remove_markup <- function(input_file){
     str_remove_all("<O>.*?</O>") %>%
     str_remove_all("<X>.*?</X>") %>%
     str_remove_all("<&>.*?</&>") %>%
-    # str_remove_all("<\*>.*?</\*>") %>% ??
+    str_remove_all("<\\*>.*?</\\*>") %>%
     str_replace_all("<#\\\\>", "\n") %>%
     str_remove_all("<.*?>")
 }
+loaded_texts_no_markup <- sapply(loaded_texts, remove_markup)
 # testfunction <- remove_markup(loaded_texts[1])
 ```
 # Analysis (take two)
@@ -122,15 +137,15 @@ library(quanteda.textstats)
 # To do: figure out where to put install.packages block (important documentation but will be pre-installed in notebook)
 ```
 ```{r}
-ice_corpus <- corpus(loaded_texts)
-docvars(ice_corpus, field = "communication_mode") <- communication_mode
-docvars(ice_corpus, field = "subcorpus") <- subcorpus
-ice_tokens <- tokens(ice_corpus)
+ice_corpus_2 <- corpus(loaded_texts_no_markup)
+docvars(ice_corpus_2, field = "communication_mode") <- communication_mode
+docvars(ice_corpus_2, field = "subcorpus") <- subcorpus
+ice_tokens_2 <- tokens(ice_corpus_2)
 # kwic(ice_tokens, pattern = "banana")
-ice_dfm <- dfm(ice_tokens)
+ice_dfm_2 <- dfm(ice_tokens_2)
 ```
 
 ```{r}
-textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="S")
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm, "communication_mode")=="S")
 ```
 
