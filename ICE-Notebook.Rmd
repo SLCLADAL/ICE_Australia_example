@@ -41,21 +41,26 @@ library(quanteda.textstats)
 # Processing the data
 
 ```{r}
+# get list of files
 corpus_files <- list.files("data", recursive = TRUE, pattern = "*.TXT", full.names = TRUE)
+# define function to load all files
 load_file <- function(input_file){
   paste(readLines(input_file), collapse="\n")
 }
+# apply function to all corpus files
 loaded_texts <- sapply(corpus_files, load_file)
 # to do: suppress incomplete final line warning
-# to do: deal with markup
+# bring in communication mode (written or spoken)
 extract_communication_mode <- function(input_file){
   substring(basename(input_file),1,1)
 }
+# apply to all files
 communication_mode <- sapply(corpus_files, extract_communication_mode)
 # bring in subcorpora
 extract_subcorpus <- function(input_file){
   substring(basename(input_file),1,3)
 }
+# apply to all files
 subcorpus <- sapply(corpus_files, extract_subcorpus)
 ```
 
@@ -64,19 +69,28 @@ subcorpus <- sapply(corpus_files, extract_subcorpus)
 - Run analysis (keywords) on data as is
 - Discuss why it's weird (markup)
 
-
 ```{r}
+# create corpus object
 ice_corpus <- corpus(loaded_texts)
+# add document variables (communication mode and subcorpus) --- can probably combine these?
 docvars(ice_corpus, field = "communication_mode") <- communication_mode
 docvars(ice_corpus, field = "subcorpus") <- subcorpus
+# tokenise corpus
 ice_tokens <- tokens(ice_corpus)
 # kwic(ice_tokens, pattern = "banana")
+# create document feature matrix for analysis
 ice_dfm <- dfm(ice_tokens)
 ```
 
+## Keyword Analysis
+
 ```{r}
+# run keyword analysis comparing all spoken files to written files
 textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="S")
 ```
+
+- results above contain a lot of unexpected symbols (markup)
+- comparison between written and spoken files probably just showing difference in written and spoken markup (eg, inaudible)
 
 # Processing the data (take two)
 
@@ -90,8 +104,6 @@ textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="S")
 #remove_markup <- function(input_file){
   
 #}
-install.packages("tidyverse")
-library(tidyverse)
 #str_remove_all with regex? spoken and written markup different?
 # str_remove_all(loaded_texts[1], "<[^<>]*>") - might need multiple rounds of regex to capture everything
 # test <- str_replace_all(loaded_texts[1], "\n", " ")
@@ -112,6 +124,7 @@ library(tidyverse)
 # why is <#\> turning into <#\\> ???? need to escape both 
 #wtest5 <- str_replace_all(wtest4, "<#\\\\>", "\n")
 #wtest6 <- str_remove_all(wtest5, "<.*?>")
+# define function to remove markup
 remove_markup <- function(input_file){
   input_file %>%
     str_replace_all("\n", " ") %>%
@@ -122,6 +135,7 @@ remove_markup <- function(input_file){
     str_replace_all("<#\\\\>", "\n") %>%
     str_remove_all("<.*?>")
 }
+# apply function to all files
 loaded_texts_no_markup <- sapply(loaded_texts, remove_markup)
 # testfunction <- remove_markup(loaded_texts[1])
 ```
@@ -130,22 +144,83 @@ loaded_texts_no_markup <- sapply(loaded_texts, remove_markup)
 - Look it's different now
 
 ```{r}
-install.packages("quanteda")
-install.packages("quanteda.textstats")
-library(quanteda)
-library(quanteda.textstats)
-# To do: figure out where to put install.packages block (important documentation but will be pre-installed in notebook)
-```
-```{r}
+# create corpus (without markup)
 ice_corpus_2 <- corpus(loaded_texts_no_markup)
+# add document variables
 docvars(ice_corpus_2, field = "communication_mode") <- communication_mode
 docvars(ice_corpus_2, field = "subcorpus") <- subcorpus
+# tokenise
 ice_tokens_2 <- tokens(ice_corpus_2)
 # kwic(ice_tokens, pattern = "banana")
+# create new dfm without markup
 ice_dfm_2 <- dfm(ice_tokens_2)
+# punctuation??
 ```
+
+- now when we run analysis again we shouldn't get all those markup symbols
+
+## Keyword Analysis
 
 ```{r}
-textstat_keyness(ice_dfm_2, target = docvars(ice_dfm, "communication_mode")=="S")
+# rerun keyword analysis without markup 
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "communication_mode")=="S")
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "communication_mode")=="W")
+```
+- now we see some true differences (e.g., lots of filler words in spoken, lots of punctuation in written -- punctuation is also something that should be considered, do we delete? depends)
+- statistics??
+- how many texts actually use keywords? (below)
+- compare between subcorpora (below)
+- kwic for specific things (below)
+- numbers -  seem to be written in full in spoken and numerals in written, not consistent though 
+- tonight/today?
+- have to go much further down to see things we talk about but don't write about, compared to things we write about but don't talk about
+
+## Keywords in Context
+
+```{r}
+# context for keywords
+kwic(ice_tokens_2, "faithfully")
+kwic(ice_tokens_2, "wombats")
+kwic(ice_tokens_2, "echidnas")
+kwic(ice_tokens_2, "worship")
+kwic(ice_tokens_2, "ladies")
+kwic(ice_tokens_2, "galaxy")
 ```
 
+- some keywords (e.g., above) appear many times in a few files (wombats in W2B-021, echidnas in W2B-027 - files are from nature magazines)
+- check metadata for what these files are (e.g., 'faithfully' is almost always after 'yours', ie as a sign off to a letter)
+- context can be crucial - 'worship' is a keyword in spoken files which initially seems odd, but in context it's clear that it is almost exclusively used as a title (Your Worship)
+- galaxy surprising keyword for spoken - almost exclusively in one file (astronomy broadcast)
+
+## Subcorpus Comparison
+
+```{r}
+# subcorpora vs whole corpus
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="W1A")
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="S1A")
+```
+- some of these end up looking very similar to the earlier comparison between written and spoken (eg S1A above)
+- this might change if we compare only to other spoken files
+
+```{r}
+# run keyword analysis on subcorpora
+written_dfm <- dfm_subset(ice_dfm_2, subset = ice_dfm_2$communication_mode == "W")
+spoken_dfm <- dfm_subset(ice_dfm_2, subset = ice_dfm_2$communication_mode == "S")
+textstat_keyness(written_dfm, target = docvars(written_dfm, "subcorpus")=="W1A")
+textstat_keyness(spoken_dfm, target = docvars(spoken_dfm, "subcorpus")=="S1A")
+```
+- keywords actually don't change, which is probably because S1A is dialogues, so it would be expected to have the strongest features of spoken language
+- stats do change though 
+
+```{r}
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="S2B")
+textstat_keyness(spoken_dfm, target = docvars(spoken_dfm, "subcorpus")=="S2B")
+```
+- much more of a difference here
+
+```{r}
+textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="W2F")
+textstat_keyness(written_dfm, target = docvars(written_dfm, "subcorpus")=="W2F")
+```
+- W2F is novels, so a lot of keywords seem to be character names
+- first person pronouns are much higher in the comparison to other written files (they are more common in spoken language than written)
