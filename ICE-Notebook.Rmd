@@ -11,7 +11,7 @@ output: html_notebook
 
 # Set up?
 
-- Install packages 
+For the code in this notebook to run, we need to install and load the packages used. First, we install them using the install.packages function.
 
 ```{r}
 install.packages("tidyverse")
@@ -19,7 +19,7 @@ install.packages("quanteda")
 install.packages("quanteda.textstats")
 ```
 
-- Load
+Now that they have been installed, we need to load the packages using the library function.
 
 ```{r}
 library(tidyverse)
@@ -66,11 +66,13 @@ subcorpus <- sapply(corpus_files, extract_subcorpus)
 
 # Analysis
 
+Now that we have the data loaded, we can start running some analysis steps. First, we need to... 
+
 - Run analysis (keywords) on data as is
 - Discuss why it's weird (markup)
 
 ```{r}
-# create corpus object
+# create corpus object from loaded texts using corpus function
 ice_corpus <- corpus(loaded_texts)
 # add document variables (communication mode and subcorpus) --- can probably combine these?
 docvars(ice_corpus, field = "communication_mode") <- communication_mode
@@ -84,19 +86,42 @@ ice_dfm <- dfm(ice_tokens)
 
 ## Keyword Analysis
 
+First, we will run keyword analysis, which is a commonly used text analysis technique. The function textstats_keyness identifies words that are significantly more frequent in a target text than a reference text, and therefore can be said to be characteristic of the target text in some way. (rewrite) 
+
+Here, we will be using the document variables that we added in the previous section to compare all spoken texts against all written texts, to identify keywords of each.
+
 ```{r}
 # run keyword analysis comparing all spoken files to written files
 textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="S")
+# run keyword analysis comparing all written files to spoken files
+textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="W")
 ```
+
+As you can see, the results contain a lot of unexpected symbols. If we inspect the data, we can see that it contains markup as part of the text:
+
+```{r}
+head(ice_corpus)
+```
+Likely, what we are seeing in the keyword analysis above is merely the difference between the written and spoken markup conventions. In order to get a more accurate keyword list, we should remove the markup first, and rerun the keyword analysis on the bare text.
 
 - results above contain a lot of unexpected symbols (markup)
 - comparison between written and spoken files probably just showing difference in written and spoken markup (eg, inaudible)
 
 # Processing the data (take two)
 
+So, we need to do some additional data processing. We can't just go ahead and remove anything that isn't regular text. We need to carefully inspect the data (and metadata) to work out what we want to keep and what we want to get rid of. There isn't necessarily a right or wrong approach here - it will depend on your particular research. Depending on what you are interested in, it might be very important to retain some parts of the markup. As the main analytic method we are using here is keyword analysis, which looks only at word frequencies, we can confidently remove all markup and proceed with just the bare text.
+
+The first problem we ran into with this data was that there is no explanation of the markup in the metadata files. We did manage to find markup manuals on the International Corpus of English website: https://www.ice-corpora.uzh.ch/en/manuals.html
+
 - Discussion of data processing/'cleaning', what decisions are made here (depends what you're looking at)
 - Actually look at data (inventory of tags), link to ICE markup guide (but point out that it might not be consistent - again, look at data!)
 - Decide what to remove
+
+
+```{r}
+str_replace_all()
+```
+
 
 ```{r}
 # Deal with markup
@@ -189,7 +214,7 @@ kwic(ice_tokens_2, "galaxy")
 
 - some keywords (e.g., above) appear many times in a few files (wombats in W2B-021, echidnas in W2B-027 - files are from nature magazines)
 - check metadata for what these files are (e.g., 'faithfully' is almost always after 'yours', ie as a sign off to a letter)
-- context can be crucial - 'worship' is a keyword in spoken files which initially seems odd, but in context it's clear that it is almost exclusively used as a title (Your Worship)
+- context can be crucial - 'worship' is a keyword in spoken files which initially seems odd, but in context it's clear that it is almost exclusively used as a title (Your Worship) --- this is also interesting because it's an obsolete title in australia (add reference)
 - galaxy surprising keyword for spoken - almost exclusively in one file (astronomy broadcast)
 
 ## Subcorpus Comparison
