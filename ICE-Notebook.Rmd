@@ -111,16 +111,39 @@ Likely, what we are seeing in the keyword analysis above is merely the differenc
 
 So, we need to do some additional data processing. We can't just go ahead and remove anything that isn't regular text. We need to carefully inspect the data (and metadata) to work out what we want to keep and what we want to get rid of. There isn't necessarily a right or wrong approach here - it will depend on your particular research. Depending on what you are interested in, it might be very important to retain some parts of the markup. As the main analytic method we are using here is keyword analysis, which looks only at word frequencies, we can confidently remove all markup and proceed with just the bare text.
 
+## Removing Markup
+
 The first problem we ran into with this data was that there is no explanation of the markup in the metadata files. We did manage to find markup manuals on the International Corpus of English website: https://www.ice-corpora.uzh.ch/en/manuals.html
+
+On first glance, the markup described in these manuals does appear to match the markup in our data. That said, it's best to closely inspect the data to be sure. Rather than reading through the entire dataset to make sure all markup is consistent with the manuals, let's create an inventory of all markup tags and symbols present. 
+
+```{r}
+combined_texts <- str_c(loaded_texts)
+markup_inventory <- function(input_file){
+  input_file %>%
+    str_replace_all("<", " <") %>%
+    str_replace_all(">", "> ") %>%
+    str_replace_all(" ", "\n") %>%
+    unique() %>% # this doesn't seem to be doing anything
+    str_extract_all(".*[\\<\\>].*")
+}
+inventory <- markup_inventory(combined_texts)
+head(inventory)
+```
+
+If we carefully inspect this our markup inventory, we can see that the tags mostly match the markup manuals, with a couple of exceptions. First, the 'text unit marker' tag contains a back slash in our data ("#\\>" - this shows up as a double back slash in R as it is a special character that has to be escaped). Second, there is an extra tag: <*>. If we take a closer look at this tag in context, we can see that it seems to signify text formatting:
+
+```{r}
+str_extract_all(combined_texts, ".*\\<.\\*\\>.*") # is there a way to get this to only display matches?
+```
+
+Now that we know how the tags are actually used in our data, we need to decide what to keep and what to get rid of. We can see from the manual and from our inventory, that some tags are used in pairs with additional markup in between (e.g., "<O>inaudible</O>"). If we had simply removed all markup, we would have ended up with markup text incorrectly included in our analysis. There is also some markup text that we probably do want to include, such as overlapping strings, so we also can't just remove anything between tags.
+
+It's important to note that decisions around what to include and what to remove are part of your analysis. This is not just data cleaning. These choices aren't necessarily clear and they depend on your research question and aims. For our purposes, we are going to remove any untranscribed text ("<O>...</O>"), extra-corpus text ("<X>...</X>"), formatting text ("<*>...</*>"), and editorial comments ("<&>...</&>"). Then, we will remove all markup sybols. 
 
 - Discussion of data processing/'cleaning', what decisions are made here (depends what you're looking at)
 - Actually look at data (inventory of tags), link to ICE markup guide (but point out that it might not be consistent - again, look at data!)
 - Decide what to remove
-
-
-```{r}
-str_replace_all()
-```
 
 
 ```{r}
