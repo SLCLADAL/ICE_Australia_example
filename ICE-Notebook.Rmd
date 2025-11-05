@@ -36,8 +36,8 @@ library(quanteda.textstats)
 
 
 ```{r}
-# work out easiest way to download data
-# ice_corpus <- 
+download.file("https://figshare.mq.edu.au/ndownloader/files/43778337", "ice_aus.zip")
+unzip("ice_aus.zip", exdir = "data")
 ```
 
 # Processing the data
@@ -86,7 +86,9 @@ ice_dfm <- dfm(ice_tokens)
 
 ## Keyword Analysis
 
-Now that we have our data fully loaded into R in the correct format, we can start applying some text analytics methods. First, we will run keyword analysis, which is a commonly used text analysis technique. Keywords in text analysis are words that are particularly frequent in a text or collection of texts, and are therefore characteristic of that text or collection in some way. To find keywords in the ICE-AUS corpus, we will use the textstats_keyness function from the quanteda package, which identifies words that have significantly higher frequency in a target text than a reference text.
+Now that we have our data fully loaded into R in the correct format, we can start applying some text analytics methods. First, we will run keyword analysis, which is a commonly used text analysis technique. Keywords in text analysis are words that are particularly frequent in a text or collection of texts, and are therefore characteristic of that text or collection in some way. To find keywords in the ICE-AUS corpus, we will use the textstats_keyness function from the quanteda package, which identifies words that have significantly higher frequency in a target text than a reference text. 
+
+- add references to LADAL kwics
 
 We still start with comparing all spoken texts against all written texts in order to identify keywords of each, using the document variables we assigned in the previous section.
 
