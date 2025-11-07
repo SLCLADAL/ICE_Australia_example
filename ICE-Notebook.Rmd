@@ -3,18 +3,18 @@ title: "ICE Corpus"
 output: html_notebook
 ---
 
-
 # Intro
 
-The ICE-AUS (ICE?) Corpus is the Australian component of the International Corpus of English, which is a collection of corpora aiming to represent various varieties of English. It consists of ~1m words, split between written (40%) and spoken (60%) samples collected between 1992 and 1996. It is further split into a number of subcorpora containing different kinds of written and spoken data, such as conversations, speeches, essays, and letters. 
+The ICE-AUS Corpus is the Australian component of the International Corpus of English, which is a collection of corpora aiming to represent various varieties of English. ICE-AUS consists of ~1m words, split between written (40%) and spoken (60%) samples collected between 1992 and 1996. It is further split into a number of subcorpora containing different kinds of written and spoken data, such as conversations, speeches, essays, and letters. 
 
-This notebook explores getting started with computational analysis of the ICE-AUS corpus. It covers loading the corpus into R, data preparation, keyword analysis, and concordancing, and is structured in a narrative format to give you an idea of the kinds of questions and decisions that may come up when performing text analysis on online corpora. 
+This notebook explores getting started with computational analysis of the ICE-AUS corpus. It covers loading the corpus into R, data preparation, keyword analysis, and concordancing, and is structured in a narrative format to give you an idea of the kinds of questions and decisions that may come up when performing text analysis on online corpora.
 
 # Set up
 
 For the code in this notebook to run, we need to install and load the packages used. First, we install them using the install.packages function.
 
 ```{r}
+# install packages
 install.packages("tidyverse")
 install.packages("quanteda")
 install.packages("quanteda.textstats")
@@ -23,22 +23,25 @@ install.packages("quanteda.textstats")
 Now that they have been installed, we need to load the packages using the library function.
 
 ```{r}
+# load packages
 library(tidyverse)
 library(quanteda)
 library(quanteda.textstats)
 ```
 
 
-# Download the data (Still to do)
+# Download the data
 
-- Download data from web
-- Something about data format, metadata, etc
-
+Since the data is freely available online, we just need to tell R where to download it from, and where to save it. Run the code below to download full corpus and save it in the data folder within this project. 
 
 ```{r}
+# download the zip file
 download.file("https://figshare.mq.edu.au/ndownloader/files/43778337", "ice_aus.zip")
+# unzip and save in data folder
 unzip("ice_aus.zip", exdir = "data")
 ```
+
+Once you have the data downloaded and saved in the data folder, have a look to see what data and metadata is included, what format it is in, and what the folder structure is. You should see that this version of the corpus contains three folders at the highest level: ICE Spoken, ICE written, and a metadata folder. The spoken and written folders are further broken down into separate subcorpora which contain different text types, based on the common ICE corpus design (https://www.ice-corpora.uzh.ch/en/design.html). For example, the spoken files are split into dialogues, both private (S1A) and public (S1B), and monologues, both scripted (S2B) and unscripted (S2A). The metadata folder contains additional information about the corpus data, including details of each text and demographic information about speakers.
 
 # Processing the data
 
@@ -70,12 +73,12 @@ subcorpus <- sapply(corpus_files, extract_subcorpus)
 
 # Analysis
 
-Now that we have the data loaded, we can start running some analysis steps. First, we need to create a corpus object in R, which will combine our original .TXT files with our document variables (communication mode and subcorpus). From our corpus object, we will also need to create a document feature matrix (DFM), which stores frequency information about the words/terms (??) in our corpus in a mathematical matrix format, which we will need for our keyword analysis. Run the code below to create the corpus object and DFM.
+Now that we have the data loaded, we can start running some analysis steps. First, we need to create a corpus object in R, which will combine our original .TXT files with our document variables (communication mode and subcorpus). From our corpus object, we will also need to create a document feature matrix (DFM), which stores frequency information about the words/terms in our corpus in a mathematical matrix format, which we will need for our keyword analysis. Run the code below to create the corpus object and DFM.
 
 ```{r}
 # create corpus object from loaded texts using corpus function from the quanteda package
 ice_corpus <- corpus(loaded_texts)
-# add document variables (communication mode and subcorpus) --- can probably combine these?
+# add document variables (communication mode and subcorpus)
 docvars(ice_corpus, field = "communication_mode") <- communication_mode
 docvars(ice_corpus, field = "subcorpus") <- subcorpus
 # tokenise corpus
@@ -86,11 +89,9 @@ ice_dfm <- dfm(ice_tokens)
 
 ## Keyword Analysis
 
-Now that we have our data fully loaded into R in the correct format, we can start applying some text analytics methods. First, we will run keyword analysis, which is a commonly used text analysis technique. Keywords in text analysis are words that are particularly frequent in a text or collection of texts, and are therefore characteristic of that text or collection in some way. To find keywords in the ICE-AUS corpus, we will use the textstats_keyness function from the quanteda package, which identifies words that have significantly higher frequency in a target text than a reference text. 
+Now that we have our data fully loaded into R in the correct format, we can start applying some text analytics methods. First, we will run keyword analysis, which is a commonly used text analysis technique. Keywords in text analysis are words that are particularly frequent in a text or collection of texts, and are therefore characteristic of that text or collection in some way. For more information on keywords, see the LADAL tutorial Keyness and Keyword Analysis in R ([Schweinberger, 2025a](https://ladal.edu.au/tutorials/key/key.html)). 
 
-- add references to LADAL kwics
-
-We still start with comparing all spoken texts against all written texts in order to identify keywords of each, using the document variables we assigned in the previous section.
+To find keywords in the ICE-AUS corpus, we will use the textstats_keyness function from the quanteda package, which identifies words that have significantly higher frequency in a target text than a reference text. We will start with comparing all spoken texts against all written texts in order to identify keywords of each, using the document variables we assigned in the previous section.
 
 ```{r}
 # run keyword analysis comparing spoken files to written files
@@ -102,6 +103,7 @@ textstat_keyness(ice_dfm, target = docvars(ice_dfm, "communication_mode")=="W")
 When we run the code above, we can see that the results contain a lot of unexpected symbols, as well as what seems to be extra-corpus descriptions such as 'inaudible' or formatting terms such as 'bold' and 'longdash'. If we inspect the data, we can see that it contains markup as part of the text:
 
 ```{r}
+# see first ten lines of the corpus
 head(ice_corpus)
 ```
 Markup like this is common in transcript data. It does present a challenge for computational analysis, though. In this case, it is likely that what we are seeing in the keyword analysis above is merely the difference between the written and spoken markup conventions. In order to get a more accurate keyword list, we should remove the markup and rerun the keyword analysis on the bare text.
@@ -119,8 +121,10 @@ The second problem we run into with this data is that there is no explanation of
 On first glance, the markup described in these manuals does appear to match the markup in our data. That said, it's best to closely inspect the data to be sure. Rather than reading through the entire dataset to make sure all markup is consistent with the manuals, let's create an inventory of all markup tags and symbols present. The code below is an example of how to do this in R, but again it's definitely a good idea to explore the data more closely in a text editor.
 
 ```{r}
+# combine all corpus files
 combined_texts <- str_c(loaded_texts)
-markup_inventory <- function(input_file){
+# define function to extract all markup tags
+extract_markup <- function(input_file){
   markup_examples <- input_file %>%
     str_replace_all("<", " <") %>%
     str_replace_all(">", "> ") %>%
@@ -131,50 +135,26 @@ markup_inventory <- function(input_file){
   colnames(markup_examples) <- c("markup")
   return(markup_examples)
 }
-inventory <- markup_inventory(combined_texts)
+# run markup extraction function on combined corpus files
+inventory <- extract_markup(combined_texts)
+# display all markup tags organised by number of occurrences
 inventory %>% group_by(markup) %>% summarise(count = n()) %>% arrange(desc(count))
 ```
 
 If we carefully inspect this our markup inventory, we can see that the tags mostly match the markup manuals, with a couple of exceptions. First, the 'text unit marker' tag contains a back slash in our data ("#\\>" - this shows up as a double back slash in R as it is a special character that has to be escaped). Second, there is an extra tag: <*>. If we take a closer look at this tag in context, we can see that it seems to signify some types of text formatting:
 
 ```{r}
-# find matches to mystery markup tag <*> (This takes ages?)
-# remove head() to see all results
+# find matches to mystery markup tag <*> (this may take a while)
+# head() shows just the first ten matches - remove to see all results
 head(str_extract_all((combined_texts[str_detect(combined_texts, ".*\\<.\\*\\>.*")]), ".*\\<.\\*\\>.*"))
 ```
 
 Now that we know how the tags are actually used in our data, we need to decide what to keep and what to get rid of. We can see from the manual and from our inventory that some tags are used in pairs with additional markup in between (e.g., "<O>inaudible</O>"). If we had simply removed all markup tags, we would have ended up with markup text incorrectly included in our analysis. There is also some markup text that we probably do want to include, such as overlapping strings, so we also can't just remove anything between tags.
 
-It's important to note that decisions around what to include and what to remove are part of your analysis. This is not just data cleaning. These choices aren't necessarily clear and they depend on your research questions and aims. For our purposes, we are going to remove any untranscribed text ("<O>...</O>"), extra-corpus text ("<X>...</X>"), formatting text ("<*>...</*>"), and editorial comments ("<&>...</&>"). Then, we will remove all individual markup tags.
+It's important to note that decisions around what to include and what to remove are part of your analysis. This is not just data cleaning. These choices aren't necessarily clear and they depend on your research questions and aims. For our purposes, we are going to remove any untranscribed text ("<O>...</O>"), extra-corpus text ("<X>...</X>"), formatting text ("<*>...</*>"), and editorial comments ("<&>...</&>"). Then, we will remove all individual markup tags. The code below uses regular expressions and the stringr package to remove markup tags - see the LADAL tutorials String Processing in R ([Schweinberger, 2025b](https://ladal.edu.au/tutorials/string/string.html)) and Regular Expressions in R ([Schweinberger, 2025c](https://ladal.edu.au/tutorials/regex/regex.html#introduction)) for more detail on these functions.
 
 ```{r}
-# Deal with markup - here to line 173 just notes, will be deleted
-# Replace new line with spaces, remove &*OX tags, put new lines back in before speaker/new paragraph tag (diff for spoken vs written), remove all markup
-#remove_markup <- function(input_file){
-  
-#}
-#str_remove_all with regex? spoken and written markup different?
-# str_remove_all(loaded_texts[1], "<[^<>]*>") - might need multiple rounds of regex to capture everything
-# test <- str_replace_all(loaded_texts[1], "\n", " ")
-# test2 <- str_remove_all(test, "<O>.*?</O>")
-# test3 <- str_remove_all(test2, "<X>.*?</X>")
-# test4 <- str_remove_all(test3, "<&>.*?</&>")
-# put line breaks back in
-# why is <#\> turning into <#\\> ???? need to escape both 
-# test5 <- str_replace_all(test4, "<#\\\\>", "\n")
-# test6 <- str_remove_all(test5, "<.*?>")
-# check written 
-# writtentest <- load_file("data/ICE Written/W1A/W1A-001.TXT")
-# writtentest1 <- str_replace_all(writtentest, "\n", " ")
-#wtest2 <- str_remove_all(writtentest1, "<O>.*?</O>")
-#wtest3 <- str_remove_all(wtest2, "<X>.*?</X>")
-#wtest4 <- str_remove_all(wtest3, "<&>.*?</&>")
-# put line breaks back in
-# why is <#\> turning into <#\\> ???? need to escape both 
-#wtest5 <- str_replace_all(wtest4, "<#\\\\>", "\n")
-#wtest6 <- str_remove_all(wtest5, "<.*?>")
-
-# define a function to remove markup - should I add more explanation here?
+# define a function to remove markup
 remove_markup <- function(input_file){
   input_file %>%
     str_replace_all("\n", " ") %>%
@@ -189,6 +169,9 @@ remove_markup <- function(input_file){
 loaded_texts_no_markup <- sapply(loaded_texts, remove_markup)
 # testfunction <- remove_markup(loaded_texts[1]) - delete
 ```
+
+While markup is part of the common ICE corpus design, it is not necessarily consistent across all ICE corpora ([Kirk & Nelson, 2018](https://onlinelibrary.wiley.com/doi/full/10.1111/weng.12350)), as we saw above with "#\\>" and "<*>". If you want to have a look at other components of the ICE corpus, make sure to closely inspect the markup included and adapt the remove_markup function accordingly. Details about accessing various components of the ICE corpus can be found here: https://www.ice-corpora.uzh.ch/en/access.html. 
+
 # Analysis (take two)
 
 Now that we have removed the markup, we can prepare our new files for analysis, following the same steps as earlier.
@@ -217,18 +200,15 @@ As before, we will start with comparing the written and spoken collections.
 textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "communication_mode")=="S")
 textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "communication_mode")=="W")
 ```
-What we can see in this output are the keywords, the statistical scores (we have used the default measures) (?? more on this?? or just link to LADAL?), the number of times the keyword appears in the target text, and the number of times the keyword appears in the reference text. Now that the markup symbols are gone, we are left with the true keywords in each communication mode.
+What we can see in this output are the keywords, the statistical scores (we have used the default measures - see LADAL's [Keyness and Keyword Analysis in R](https://ladal.edu.au/tutorials/key/key.html)) for more detail), the number of times the keyword appears in the target text, and the number of times the keyword appears in the reference text.  Now that the markup symbols are gone, we are left with the true keywords in each communication mode.
 
 Many of these are fairly standard differences in written and spoken language, such as the prevalence of first- and second-person pronouns and filler words in the spoken corpus. Since we did not remove punctuation, the top twelve keywords in the written corpus are all punctuation symbols, which is also not surprising. Once we get to the third and fourth page of keywords, we start to see some more interesting results. We can still see some keywords that likely reflect transcription conventions, such as the high occurrence of numbers in both sets of keywords (e.g., '4', '10', '5' in the written keywords, and 'twenty', 'nineteen', 'thirty' in the spoken keywords). While the choice between 'ten' and '10' may have some meaning in written data, in spoken data it simply represents transcription choices, which means we cannot really assess the keyness of numbers in this data. 
 
 Another thing we need to consider when we are assessing the validity of keyness results is the number of texts a keyword appears in. This is particularly relevant for the terms that are rarer in the corpus overall. For example, 'wombats' appears as the 221st keyword in the written texts, yet it only appears 31 times in total. The next step for terms such as this would be to check if it is spread across texts in the corpus or merely over-represented in one or two texts, in which case it may not be truly characteristic of the written data.
 
-- proper statistics discussion?? or just link to ladal? 
-- more discussion of results? 
-
 ## Keywords in Context
 
-If we want to analyse these keywords more closely, we can check concordances, or keywords in context. The kwic function in the quanteda package will give us the immediate context on either side for each instance of a search term. It also shows the file name for each concordance, so we will also be able to see how many different files and subcorpora each keyword appears in. Since we are just exploring the data, we will run this function on a few keywords that look interesting or unusual.
+If we want to analyse these keywords more closely, we can check concordances, or keywords in context. The kwic function in the quanteda package will give us the immediate context on either side for each instance of a search term (see LADAL Concordancing with R for more detail ([Schweinberger, 2024](https://ladal.edu.au/tutorials/kwics/kwics.html#introduction))). It also shows the file name for each concordance, so we will also be able to see how many different files and subcorpora each keyword appears in. Since we are just exploring the data, we will run this function on a few keywords that look interesting or unusual.
 
 ```{r}
 # context for keywords
@@ -244,9 +224,7 @@ For some keywords, the most pertinent information lies simply in the files it ap
 
 The concordances themselves also provide meaningful context to our keywords of interest. For example, 'faithfully' occurs in several different files, but in a very limited context. It almost always appears immediately after 'Yours'. If we refer to the subcorpus of these occurrences (W1B) and our metadata file, we can see that these files are all letters, and thus this keyword largely reflects the text types collected for the ICE corpus.
 
-Another interesting term to inspect is 'worship', which surprisingly appears as keyword 134 in the spoken data. When we look at the concordances, though, it is also used in one very specific context - as an honorific term of address, with 'Your'. This is a particularly interesting result thirty years after the ICE-AUS corpus was collected, as 'Your Worship' has been an obsolete title for magistrates since 2004 (add reference). Again, referring back to our metadata file we can see that this keyword mostly appears in cross-examinations and legal presentations. 
-
-- more here?
+Another interesting term to inspect is 'worship', which surprisingly appears as keyword 134 in the spoken data. When we look at the concordances, though, it is also used in one very specific context - as an honorific term of address, with 'Your'. This is a particularly interesting result thirty years after the ICE-AUS corpus was collected, as 'Your Worship' has been an obsolete title for magistrates since 2004 (https://localcourt.nsw.gov.au/about-us/history.html, https://www.mcv.vic.gov.au/sites/default/files/2018-10/Practice%20Direction%206%20of%202004.pdf, https://www.abc.net.au/news/2004-11-13/magistrates-give-up-worship-for-honour/584628). Again, referring back to our metadata file we can see that this keyword mostly appears in cross-examinations and legal presentations. 
 
 ## Subcorpus Comparison
 
@@ -260,7 +238,6 @@ textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="W1A")
 textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="S1A")
 ```
 The problem with this approach is that in comparing a subcorpus with a single communication mode against all written and spoken files combined may end up looking very similar to our earlier comparison between the written and spoken data. If we want to see terms that are key to these subcorpora specifically, it may be better to compare them to other files of the same communication mode. In the code block below, we create separate DFMs for the written and spoken files, so we can use each as a separate reference text for our keyword analysis.
-
 
 ```{r}
 # create dfm of written data
@@ -293,6 +270,3 @@ textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="W2F")
 textstat_keyness(written_dfm, target = docvars(written_dfm, "subcorpus")=="W2F")
 ```
 Here, we again see a few differences in the two analyses. One noticeable difference is the first-person pronouns in the first page of keywords with only written files as the reference text. Remembering back to our first keyword analysis - comparing written and spoken data - we know that first-person pronouns are more common in the spoken data, which is likely why we are seeing a big difference in the keyness measures for these when we compare against only written data. You may be able to guess from the high number of pronouns and names in this keyword list that the W2F subcorpus consists of extracts from novels.
-
-- more analysis? 
-- how to end??
