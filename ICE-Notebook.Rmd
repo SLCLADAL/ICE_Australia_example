@@ -11,7 +11,7 @@ This notebook explores getting started with computational analysis of the ICE-AU
 
 # Set up
 
-For the code in this notebook to run, we need to install and load the packages used. First, we install them using the install.packages function.
+For the code in this notebook to run, we need to install and load the packages used. First, we install them using the 'install.packages' function.
 
 ```{r}
 # install packages
@@ -20,7 +20,7 @@ install.packages("quanteda")
 install.packages("quanteda.textstats")
 ```
 
-Now that they have been installed, we need to load the packages using the library function.
+Now that they have been installed, we need to load the packages using the 'library' function.
 
 ```{r}
 # load packages
@@ -28,7 +28,6 @@ library(tidyverse)
 library(quanteda)
 library(quanteda.textstats)
 ```
-
 
 # Download the data
 
@@ -151,7 +150,9 @@ head(str_extract_all((combined_texts[str_detect(combined_texts, ".*\\<.\\*\\>.*"
 
 Now that we know how the tags are actually used in our data, we need to decide what to keep and what to get rid of. We can see from the manual and from our inventory that some tags are used in pairs with additional markup in between (e.g., "<O>inaudible</O>"). If we had simply removed all markup tags, we would have ended up with markup text incorrectly included in our analysis. There is also some markup text that we probably do want to include, such as overlapping strings, so we also can't just remove anything between tags.
 
-It's important to note that decisions around what to include and what to remove are part of your analysis. This is not just data cleaning. These choices aren't necessarily clear and they depend on your research questions and aims. For our purposes, we are going to remove any untranscribed text ("<O>...</O>"), extra-corpus text ("<X>...</X>"), formatting text ("<*>...</*>"), and editorial comments ("<&>...</&>"). Then, we will remove all individual markup tags. The code below uses regular expressions and the stringr package to remove markup tags - see the LADAL tutorials String Processing in R (https://ladal.edu.au/tutorials/string/string.html) and Regular Expressions in R (https://ladal.edu.au/tutorials/regex/regex.html) for more detail on these functions.
+It's important to note that decisions around what to include and what to remove are part of your analysis. This is not just data cleaning; these choices aren't necessarily clear and they will depend on your research questions and aims. Any changes to your data should be carefully considered not just within the context of the computational techniques you want to apply, but within the context of your research. For a more critical discussion of these issues, see Rawson and Muñoz's 'Against Cleaning' (https://www.jstor.org/stable/pdf/10.5749/j.ctvg251hk.26.pdf?acceptTC=true&coverpage=false). 
+
+For our purposes, we are going to remove any untranscribed text ("<O>...</O>"), extra-corpus text ("<X>...</X>"), formatting text ("<*>...</*>"), and editorial comments ("<&>...</&>"). Then, we will remove all individual markup tags. This allows us to remove the text in between the first lot of tags (as we have deemed this to be not part of the data we are currently investigating), while leaving the text in between other tags (such as overlapping turns). The code below uses regular expressions and the stringr package to remove markup tags - see the LADAL tutorials String Processing in R (https://ladal.edu.au/tutorials/string/string.html) and Regular Expressions in R (https://ladal.edu.au/tutorials/regex/regex.html) for more detail on these functions.
 
 ```{r}
 # define a function to remove markup
@@ -270,4 +271,6 @@ textstat_keyness(written_dfm, target = docvars(written_dfm, "subcorpus")=="W2F")
 ```
 Here, we again see a few differences in the two analyses. One noticeable difference is the first-person pronouns in the first page of keywords with only written files as the reference text. Remembering back to our first keyword analysis - comparing written and spoken data - we know that first-person pronouns are more common in the spoken data, which is likely why we are seeing a big difference in the keyness measures for these when we compare against only written data. You may be able to guess from the high number of pronouns and names in this keyword list that the W2F subcorpus consists of extracts from novels.
 
+# Conclusion
 
+This notebook has described just a couple of analytic methods that could be used with the ICE-AUS corpus. Here, we have only looked at the Australian component of the ICE project, comparing across communication modes and subcorpora. However, the common design of ICE corpora also provides an opportunity to compare different varieties of English using different ICE components (e.g. https://www.tandfonline.com/doi/full/10.1080/07268602.2020.1823817?; https://www.tandfonline.com/doi/full/10.1080/13488678.2014.908529?). The ICE project website has information on getting access to various component corpora (https://www.ice-corpora.uzh.ch/en/access.html), as well as a selection of publications (https://www.ice-corpora.uzh.ch/en/publics.html). There are also many more text analytic techniques that could be applied to ICE corpus data; see the Language Technology and Data Analysis Laboratory for tutorials on other text analytic methods (https://ladal.edu.au/tutorials.html).
