@@ -186,7 +186,6 @@ docvars(ice_corpus_2, field = "subcorpus") <- subcorpus
 ice_tokens_2 <- tokens(ice_corpus_2)
 # create new dfm without markup
 ice_dfm_2 <- dfm(ice_tokens_2)
-# punctuation?? need to discuss
 ```
 
 We have now created a markup-free corpus, tokenised it, and created a document feature matrix, which means we can move on to keyword analysis again.
@@ -231,7 +230,6 @@ Another interesting term to inspect is 'worship', which surprisingly appears as 
 Another keyword analysis we can do is to compare the different subcorpora. There are a few different ways we could do this, but we will start by comparing one subcorpus to the rest of the corpus.
 
 ```{r}
-# does this remove the target from the reference?? 
 # keyword analysis of W1A subcorpus, with the rest of the corpus as the reference
 textstat_keyness(ice_dfm_2, target = docvars(ice_dfm_2, "subcorpus")=="W1A")
 # keyword analysis of S1A subcorpus, with the rest of the corpus as the reference
