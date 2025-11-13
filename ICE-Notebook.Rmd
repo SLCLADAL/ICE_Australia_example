@@ -11,7 +11,7 @@ This notebook explores getting started with computational analysis of the ICE-AU
 
 # Set up
 
-For the code in this notebook to run, we need to install and load the packages used. First, we install them using the 'install.packages' function.
+For the code in this notebook to run, we need to install and load the packages used. First, we install them using the install.packages function.
 
 ```{r}
 # install packages
@@ -20,7 +20,7 @@ install.packages("quanteda")
 install.packages("quanteda.textstats")
 ```
 
-Now that they have been installed, we need to load the packages using the 'library' function.
+Now that they have been installed, we need to load the packages using the library function.
 
 ```{r}
 # load packages
